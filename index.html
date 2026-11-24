@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ular Tangga 3D - Bahtera &amp; Orbit</title>
+<meta name="description" content="Game ular tangga 3D di browser: dua dunia, lawan komputer, dadu charge, musik WebAudio. Tanpa install, tinggal buka dan main.">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230e2a47'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='%23ff7a29' font-family='Arial' font-weight='bold'>U</text></svg>">
+</head>
+<body data-theme="bahtera">
+<div id="scene-container"></div>
+
+<!-- HUD dalam game -->
+<div id="hud" class="hidden">
+  <div id="players-panel"></div>
+  <div id="turn-banner">Giliran kamu</div>
+  <div id="hud-buttons">
+    <button id="btn-sound" class="hud-btn" title="Suara nyala/mati">Suara</button>
+    <button id="btn-camera" class="hud-btn" title="Kamera ke tampilan awal">Kamera</button>
+    <button id="btn-pause" class="hud-btn" title="Jeda">Jeda</button>
+  </div>
+  <div id="toast" class="hidden"></div>
+  <div id="dice-area">
+    <div id="charge-wrap" class="hidden">
+      <div id="charge-zone"></div>
+      <div id="charge-fill"></div>
+    </div>
+    <button id="btn-dice">LEMPAR DADU</button>
+    <div id="dice-hint">Tahan tombol lalu lepas di zona hijau buat lemparan sempurna</div>
+  </div>
+</div>
+
+<!-- Menu utama -->
+<div id="menu">
+  <div class="menu-card">
+    <h1>ULAR TANGGA <span>3D</span></h1>
+    <p class="tagline">Dua dunia, satu papan. Naik tangga, hindari ular, sampai petak 100 duluan.</p>
+
+    <div class="theme-row">
+      <button class="theme-card selected" data-theme-pick="bahtera">
+        <div class="theme-art art-bahtera"></div>
+        <strong>Bahtera</strong>
+        <small>Kapal bajak laut &amp; ular</small>
+      </button>
+      <button class="theme-card" data-theme-pick="orbit">
+        <div class="theme-art art-orbit"></div>
+        <strong>Orbit</strong>
+        <small>Antariksa &amp; cacing angkasa</small>
+      </button>
+    </div>
+
+    <div class="mode-row">
+      <button id="mode-ai" class="mode-btn selected">Lawan Komputer</button>
+      <button id="mode-friends" class="mode-btn">Bersama Teman</button>
+    </div>
+
+    <div id="setup-ai" class="setup">
+      <label>Nama kamu
+        <input id="ai-name" type="text" maxlength="14" value="Pemain 1">
+      </label>
+      <label>Karakter kamu
+        <div id="ai-char" class="char-grid"></div>
+      </label>
+      <label>Jumlah komputer lawan
+        <div class="seg-row" id="ai-count">
+          <button data-v="1" class="seg selected">1</button>
+          <button data-v="2" class="seg">2</button>
+          <button data-v="3" class="seg">3</button>
+        </div>
+      </label>
+    </div>
+
+    <div id="setup-friends" class="setup hidden">
+      <label>Jumlah pemain
+        <div class="seg-row" id="fr-count">
+          <button data-v="2" class="seg selected">2</button>
+          <button data-v="3" class="seg">3</button>
+          <button data-v="4" class="seg">4</button>
+        </div>
+      </label>
+      <div id="fr-rows"></div>
+      <label>Tambah pemain komputer
+        <div class="seg-row" id="fr-ai">
+          <button data-v="0" class="seg selected">0</button>
+          <button data-v="1" class="seg">1</button>
+          <button data-v="2" class="seg">2</button>
+        </div>
+      </label>
+    </div>
+
+    <div class="setup">
+      <label>Papan
+        <div class="seg-row" id="board-pick">
+          <button data-v="mudah" class="seg">Mudah</button>
+          <button data-v="normal" class="seg selected">Normal</button>
+          <button data-v="kacau" class="seg">Kacau</button>
+          <button data-v="acak" class="seg">Acak</button>
+        </div>
+      </label>
+      <div class="rules">
+        <label class="chk"><input type="checkbox" id="rule-six" checked> Angka 6 lempar lagi</label>
+        <label class="chk"><input type="checkbox" id="rule-three-six" checked> Tiga angka 6 berturut gugur</label>
+        <label class="chk"><input type="checkbox" id="rule-bounce" checked> Pas di 100, lebihnya memantul</label>
+      </div>
+    </div>
+
+    <button id="btn-start">MULAI MAIN</button>
+
+    <div class="menu-links">
+      <button id="btn-help" class="link-btn">Cara Main</button>
+      <button id="btn-settings" class="link-btn">Pengaturan</button>
+    </div>
+
+    <div id="settings-panel" class="hidden">
+      <label>Volume musik <input id="set-music" type="range" min="0" max="100" value="55"></label>
+      <label>Volume efek suara <input id="set-sfx" type="range" min="0" max="100" value="90"></label>
+      <label>Kualitas grafis
+        <div class="seg-row" id="set-quality">
+          <button data-v="auto" class="seg selected">Otomatis</button>
+          <button data-v="high" class="seg">Tinggi</button>
+          <button data-v="low" class="seg">Rendah</button>
+        </div>
+      </label>
+      <label class="chk"><input type="checkbox" id="set-fastai"> Percepat giliran komputer</label>
+      <label class="chk"><input type="checkbox" id="set-mute"> Bisukan semua suara</label>
+    </div>
+
+    <p class="credit">Dibuat oleh mochinho</p>
+  </div>
+</div>
+
+<!-- Cara main -->
+<div id="help" class="modal hidden">
+  <div class="modal-card">
+    <h2>Cara Main</h2>
+    <ol>
+      <li>Di giliranmu, <strong>tahan</strong> tombol LEMPAR DADU (atau tahan Spasi) lalu <strong>lepas</strong>. Bar tenaga akan terisi.</li>
+      <li>Lepas di <strong>zona hijau</strong> buat lemparan sempurna: peluang angka besar naik. Kalau bar sampai penuh dan meledak, giliranmu hangus.</li>
+      <li>Bidak jalan sesuai angka dadu. Berhenti di bawah tangga = naik. Berhenti di kepala ular = meluncur turun.</li>
+      <li>Angka 6 dapat lemparan lagi, tapi tiga angka 6 berturut-turut menggugurkan giliran (bisa dimatikan di aturan).</li>
+      <li>Menang dengan berhenti <strong>pas di petak 100</strong>. Kelebihan langkah memantul balik (bisa dimatikan di aturan).</li>
+      <li>Seret layar buat memutar kamera, gulir atau cubit buat zoom. Tombol Kamera mengembalikan tampilan ke papan penuh.</li>
+      <li>Mode Bersama Teman dimainkan bergantian di satu perangkat. Mode Lawan Komputer bisa lawan 1 sampai 3 komputer.</li>
+    </ol>
+    <button class="modal-close" data-close="help">Tutup</button>
+  </div>
+</div>
+
+<!-- Jeda -->
+<div id="pause" class="modal hidden">
+  <div class="modal-card small">
+    <h2>Jeda</h2>
+    <button id="btn-resume" class="wide-btn">Lanjutkan</button>
+    <button id="btn-restart" class="wide-btn">Ulangi dari Awal</button>
+    <button id="btn-quit" class="wide-btn">Menu Utama</button>
+  </div>
+</div>
+
+<!-- Menang -->
+<div id="win" class="modal hidden">
+  <div class="modal-card small">
+    <h2 id="win-title">Menang!</h2>
+    <p id="win-text"></p>
+    <button id="btn-again" class="wide-btn accent">Main Lagi</button>
+    <button id="btn-win-menu" class="wide-btn">Menu Utama</button>
+  </div>
+</div>
+
+<div id="confetti"></div>
+
+<script src="lib/three.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
